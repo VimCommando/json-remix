@@ -242,10 +242,10 @@ const argv = yargs
             //unbundleObjects(argv);
         }
     )
-    .option('test', {
-        description: 'Test mode, only print to console',
-        type: 'boolean',
-    })
+    // .option('test', {
+    //   description: 'Test mode, only print to console',
+    //   type: 'boolean',
+    // })
     .option('debug', {
         description: 'Log in debug mode',
         type: 'boolean',
