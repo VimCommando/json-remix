@@ -1,6 +1,6 @@
 import logger from './logger';
 const log = logger.label('unbundle');
 
-const unbundle = {};
+const ndjsonUnbundle = {};
 
-export default unbundle;
+export default ndjsonUnbundle;

@@ -1,30 +1,30 @@
 {
-    "charlie": {
+    "charlie.json": {
         "uppercase": "C",
         "lowercase": "c",
         "position": 3
     },
-    "bravo": {
+    "bravo.json": {
         "uppercase": "B",
         "lowercase": "b",
         "position": 2
     },
-    "echo": {
+    "echo.json": {
         "uppercase": "E",
         "lowercase": "e",
         "position": 5
     },
-    "foxtrot": {
+    "foxtrot.json": {
         "uppercase": "F",
         "lowercase": "f",
         "position": 6
     },
-    "delta": {
+    "delta.json": {
         "uppercase": "D",
         "lowercase": "d",
         "position": 4
     },
-    "alpha": {
+    "alpha.json": {
         "uppercase": "A",
         "lowercase": "a",
         "position": 1

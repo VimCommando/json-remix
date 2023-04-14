@@ -11,7 +11,7 @@ const log = logger.label('divide');
  * @param {string} [expression] - The optional regular expression string to use for filtering the keys.
  * @returns {Entry[]} - The array of filtered key-value pairs (entries) from the given object.
  */
-const split = (object: object, expression?: string): Entry[] => {
+const jsonSplit = (object: object, expression?: string): Entry[] => {
     if(expression == undefined) {
         log.verbose(`No key filter given`);
         return Object.entries(object);
@@ -26,4 +26,4 @@ const split = (object: object, expression?: string): Entry[] => {
     }
 };
 
-export default split;
+export default jsonSplit;

@@ -2,7 +2,7 @@
   "name": "json-remix",
   "version": "0.0.1",
   "description": "Split and/or merge large single-object .json or multi-object .ndjson files",
-  "main": "index.js",
+  "main": "bin/json-remix.js",
   "scripts": {
     "test": "test"
   },
@@ -26,6 +26,7 @@
     "trailingComma": "es5"
   },
   "devDependencies": {
+    "@types/node": "^18.15.11",
     "@types/ramda": "^0.28.24",
     "@types/yargs": "^17.0.24",
     "ts-node": "^10.9.1",
