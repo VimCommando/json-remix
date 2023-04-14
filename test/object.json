@@ -1,0 +1,20 @@
+{
+    "alpha": {
+        "uppercase": "A", "lowercase":"a", "position": 1
+    },
+    "bravo": {
+        "uppercase": "B", "lowercase": "b", "position": 2
+    },
+    "charlie":{
+        "uppercase": "C", "lowercase": "c", "position": 3
+    },
+    "delta":{
+        "uppercase": "D", "lowercase": "d", "position": 4
+    },
+    "echo":{
+        "uppercase": "E", "lowercase": "e", "position": 5
+    },
+    "foxtrot":{
+        "uppercase": "F", "lowercase": "f", "position": 6
+    }
+}
