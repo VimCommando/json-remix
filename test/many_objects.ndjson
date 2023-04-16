@@ -1,0 +1,6 @@
+{"name":"alpha","letter":{"uppercase":"A","lowercase":"a"},"position":1}
+{"name":"bravo","letter":{"uppercase":"B","lowercase":"b"},"position":2}
+{"name":"charlie","letter":{"uppercase":"C","lowercase":"c"},"position":3}
+{"name":"delta","letter":{"uppercase":"D","lowercase":"d"},"position":4}
+{"name":"echo","letter":{"uppercase":"E","lowercase":"e"},"position":5}
+{"name":"foxtrot","letter":{"uppercase":"F","lowercase":"f"},"position":6}

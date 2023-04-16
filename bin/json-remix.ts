@@ -1,6 +1,8 @@
 #!/usr/bin/env ts-node
 import jsonMerge from '../lib/jsonMerge';
 import jsonSplit from '../lib/jsonSplit'
+import ndjsonUnbundle from '../lib/ndjsonUnbundle';
+import ndjsonBundle from '../lib/ndjsonBundle';
 import { mkdir, opendir, readFile, writeFile } from 'fs/promises';
 import yargs, { Arguments } from 'yargs';
 import logger from '../lib/logger';
@@ -216,10 +218,9 @@ const argv = yargs
             type: 'string',
         },
     },
-    (argv) => {
+    async (argv) => {
         setLoggingLevel(argv);
-        log.debug(`Bundling files '${argv.dir}/*.json' into '${argv.file}'`);
-        //bundleObjects(argv);
+        await ndjsonBundle(argv); 
     })
     .command(
         'unbundle',
@@ -244,10 +245,9 @@ const argv = yargs
             description: 'Pretty-print output files'
         }
     },
-    (argv) => {
+    async (argv) => {
         setLoggingLevel(argv);
-        log.debug(`Unbundling file '${argv.file}' into '${argv.dir}/'`);
-        //unbundleObjects(argv);
+        await ndjsonUnbundle(argv);
     })
     // .option('test', {
     //   description: 'Test mode, only print to console',
