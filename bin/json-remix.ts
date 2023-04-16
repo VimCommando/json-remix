@@ -239,6 +239,11 @@ const argv = yargs
             description: 'Input filename',
             type: 'string',
         },
+        name: {
+            alias: 'n',
+            description: 'Output filename prefix',
+            type: 'array',
+        },
         pretty: {
             alias: 'y',
             default: true,
