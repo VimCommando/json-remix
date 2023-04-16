@@ -17,15 +17,15 @@ const log = logger.label('merge');
  * const filtered = merge(entries, "^foo"); // Only include entries with keys starting with "foo"
  */
 const merge = (entries: Entry[], expression?: string): object => {
-    
-    if(expression == undefined) {
+
+    if (expression === undefined) {
         log.verbose(`No key filter given`);
         return Object.fromEntries(entries);
     } else {
         const regex = new RegExp(expression);
         log.verbose(`Regex key filter: ${regex}`);
         const includeKey = ([key, value]: Entry) => regex.test(key);
-        
+
         return Object.fromEntries(entries.filter(includeKey));
     }
 };

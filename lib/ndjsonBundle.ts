@@ -16,7 +16,7 @@ const log = logger.label('bundle');
  * @throws {Error} - If there is any other error during the operation.
  */
 
-const bundleNdjson = async ({file, dir}: {file: string, dir: string}) => {
+const bundleNdjson = async ({ file, dir }: { file: string, dir: string }) => {
     let output = '';
     let i = 0;
     try {
@@ -31,7 +31,7 @@ const bundleNdjson = async ({file, dir}: {file: string, dir: string}) => {
         await writeFile(file, data);
         log.verbose(`Wrote ${i} objects to ${file}`);
     } catch (err) {
-        if (err instanceof SyntaxError ) {
+        if (err instanceof SyntaxError) {
             console.log(SyntaxError);
             log.warn(`Failed to parse: ${file}: ${SyntaxError}`);
         } else {

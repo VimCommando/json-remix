@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 import jsonMerge from '../lib/jsonMerge';
-import jsonSplit from '../lib/jsonSplit'
+import jsonSplit from '../lib/jsonSplit';
 import ndjsonUnbundle from '../lib/ndjsonUnbundle';
 import ndjsonBundle from '../lib/ndjsonBundle';
 import { mkdir, opendir, readFile, writeFile } from 'fs/promises';
@@ -14,7 +14,7 @@ const log = logger.label('cli');
 const setLoggingLevel = (argv: Arguments) => {
     const { debug, verbose } = argv;
     log.level = debug ? 'debug' : verbose ? 'verbose' : 'info';
-}
+};
 
 /**
  * Reads a JSON object from a file.
@@ -23,15 +23,15 @@ const setLoggingLevel = (argv: Arguments) => {
  * error if there was a problem reading or parsing the file.
  * @throws If there is an error reading or parsing the file.
  */
-const readObjectFromFile = async (file: string ) => {
+const readObjectFromFile = async (file: string) => {
     try {
         const buffer = await readFile(file, 'binary');
         return JSON.parse(buffer.toString());
     } catch (err) {
-        // Expand on failures, can fail separately on read or parse 
+        // Expand on failures, can fail separately on read or parse
         log.error(`${err}: ${file}`);
     }
-}
+};
 
 /**
  * Writes a JavaScript object to a file in JSON format.
@@ -42,22 +42,28 @@ const readObjectFromFile = async (file: string ) => {
  * with 4-space indentation for readability.
  * @throws If there is an error writing the file.
  */
-const writeObjectToFile = async ( object: object, {file, pretty}: {
-    file: string, 
-    pretty?: boolean
-}) => {
-    const formatJson = pretty 
-        ? (o: object): string => JSON.stringify(o,null,4)
+const writeObjectToFile = async (
+    object: object,
+    {
+        file,
+        pretty,
+    }: {
+        file: string;
+        pretty?: boolean;
+    }
+) => {
+    const formatJson = pretty
+        ? (o: object): string => JSON.stringify(o, null, 2)
         : (o: object): string => JSON.stringify(o);
 
     try {
         const data = new Uint8Array(Buffer.from(formatJson(object)));
-        log.debug(`Writing ${pretty?'pretty':'one-line'} file ${file}`);
+        log.debug(`Writing ${pretty ? 'pretty' : 'one-line'} file ${file}`);
         await writeFile(file, data);
     } catch (err) {
         log.error(`${err}: ${file}`);
     }
-}
+};
 
 /**
  * Writes an array of key-value pairs to JSON files in a directory.
@@ -68,23 +74,29 @@ const writeObjectToFile = async ( object: object, {file, pretty}: {
  * with 4-space indentation for readability.
  * @throws If there is an error creating the directory or writing any of the files.
  */
-const writeEntriesToFiles = async (entries: Entry[], { dir, pretty }: {
-     dir: string; 
-     pretty?: boolean; 
-}) => {
+const writeEntriesToFiles = async (
+    entries: Entry[],
+    {
+        dir,
+        pretty,
+    }: {
+        dir: string;
+        pretty?: boolean;
+    }
+) => {
     // Don't create the directory if it is the present working directory
     try {
         if (dir !== '.') {
             log.verbose(`Creating directory ${dir}`);
             await mkdir(dir, { recursive: true });
         }
-        entries.map(async ([key,object]:Entry) => {
-            await writeObjectToFile(object, {file: `${dir}/${key}.json`, pretty});
+        entries.map(async ([key, object]: Entry) => {
+            await writeObjectToFile(object, { file: `${dir}/${key}.json`, pretty });
         });
-    } catch(err) {
+    } catch (err) {
         log.error(`${err}: ${dir}`);
     }
-}
+};
 
 /**
  * Reads all JSON files in a directory and returns them as an array of entries.
@@ -96,13 +108,17 @@ const writeEntriesToFiles = async (entries: Entry[], { dir, pretty }: {
  * error if there was a problem reading the directory or JSON files.
  * @throws If there is an error reading the directory or JSON files.
  */
-const readEntriesFromDirectory = async (dir: string, extension?: string, sort?: boolean): Promise<Entry[]> => {
+const readEntriesFromDirectory = async (
+    dir: string,
+    extension?: string,
+    sort?: boolean
+): Promise<Entry[]> => {
     const entries: Entry[] = [];
 
     log.verbose(`Trimming extension: ${extension}`);
     // Helper function to trim file extensions
-    const trimExtension = (s: string) => extension == undefined ? s
-        : s.substring(0,s.lastIndexOf(extension));
+    const trimExtension = (s: string) =>
+        extension == undefined ? s : s.substring(0, s.lastIndexOf(extension));
 
     try {
         const directory = await opendir(dir);
@@ -117,143 +133,154 @@ const readEntriesFromDirectory = async (dir: string, extension?: string, sort?: 
     }
 
     return sort ? entries.sort() : entries;
-}
+};
 
 // Configure command-line arguments
 const argv = yargs
     .command(
         'split',
         'Splits single-object .json file object into multiple ${key}.json files. ',
-    {
-        dir: {
-          alias: 'd',
-          default: '.',
-          description: 'Target output directory',
-          type: 'string',
+        {
+            dir: {
+                alias: 'd',
+                default: '.',
+                description: 'Target output directory',
+                type: 'string',
+            },
+            file: {
+                alias: 'f',
+                demandOption: true,
+                description: 'Input filename',
+                type: 'string',
+            },
+            filter: {
+                alias: 'r',
+                description: 'Only split keys matching regex filter',
+                type: 'string',
+            },
+            pretty: {
+                alias: 'y',
+                default: true,
+                description: 'Pretty-print output files',
+                type: 'boolean',
+            },
         },
-        file: {
-            alias: 'f',
-            demandOption: true,
-            description: 'Input filename',
-            type: 'string',
-        },
-        filter: {
-            alias: 'r',
-            description: 'Only split keys matching regex filter',
-            type: 'string',
-        },
-        pretty: {
-            alias: 'y',
-            default: true,
-            description: 'Pretty-print output files',
-            type: 'boolean'
+        async (argv) => {
+            setLoggingLevel(argv);
+            log.verbose(
+                `Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`
+            );
+            const object: object = await readObjectFromFile(argv.file);
+            await writeEntriesToFiles(jsonSplit(object, argv.filter), argv);
         }
-    },
-    async (argv) => {
-        setLoggingLevel(argv);
-        log.verbose(`Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`);
-        const object: object = await readObjectFromFile(argv.file);
-        await writeEntriesToFiles(jsonSplit(object, argv.filter), argv);
-    })
+    )
     .command(
         'merge',
         'Merges multiple single-object ${key}.json files into one object.json file. ',
-    {
-        dir: {
-            alias: 'd',
-            demandOption: true,
-            description: 'Target input directory',
-            type: 'string',
+        {
+            dir: {
+                alias: 'd',
+                demandOption: true,
+                description: 'Target input directory',
+                type: 'string',
+            },
+            file: {
+                alias: 'f',
+                default: 'object.json',
+                description: 'Output filename',
+                type: 'string',
+            },
+            filter: {
+                alias: 'r',
+                description: 'Only split keys matching regex filter',
+                type: 'string',
+            },
+            pretty: {
+                alias: 'y',
+                default: true,
+                description: 'Pretty-print output files',
+                type: 'boolean',
+            },
+            sort: {
+                alias: 's',
+                default: false,
+                description: 'Alphabetically sort object keys',
+                type: 'boolean',
+            },
+            trim: {
+                alias: 't',
+                description: 'File extension to trim from object key names',
+                type: 'string',
+            },
         },
-        file: {
-            alias: 'f',
-            default: 'object.json',
-            description: 'Output filename',
-            type: 'string',
-        },
-        filter: {
-            alias: 'r',
-            description: 'Only split keys matching regex filter',
-            type: 'string',
-        },
-        pretty: {
-            alias: 'y',
-            default: true,
-            description: 'Pretty-print output files',
-            type: 'boolean',
-        },
-        sort: {
-            alias: 's',
-            default: false,
-            description: 'Alphabetically sort object keys',
-            type: 'boolean',
-        },
-        trim: {
-            alias: 't',
-            description: 'File extension to trim from object key names',
-            type: 'string'
+        async (argv) => {
+            setLoggingLevel(argv);
+            log.verbose(
+                `Merging files '${argv.dir}/*.json' into file '${argv.file}'`
+            );
+            const entries = await readEntriesFromDirectory(
+                argv.dir,
+                argv.trim,
+                argv.sort
+            );
+            await writeObjectToFile(jsonMerge(entries, argv.filter), argv);
         }
-    },
-    async (argv) => {
-        setLoggingLevel(argv);
-        log.verbose(`Merging files '${argv.dir}/*.json' into file '${argv.file}'`);
-        const entries = await readEntriesFromDirectory(argv.dir, argv.trim, argv.sort);
-        console.debug(entries);
-        await writeObjectToFile(jsonMerge(entries,argv.filter), argv);
-    })
+    )
     .command(
         'bundle',
         'Bundles multiple .json files into one .ndjson file',
-    {
-        dir: {
-            alias: 'd',
-            demandOption: true,
-            description: 'Target input directory',
-            type: 'string',
+        {
+            dir: {
+                alias: 'd',
+                demandOption: true,
+                description: 'Target input directory',
+                type: 'string',
+            },
+            file: {
+                alias: 'f',
+                default: 'merged_objects.ndjson',
+                description: 'Output filename',
+                type: 'string',
+            },
         },
-        file: {
-            alias: 'f',
-            default: 'merged_objects.ndjson',
-            description: 'Output filename',
-            type: 'string',
-        },
-    },
-    async (argv) => {
-        setLoggingLevel(argv);
-        await ndjsonBundle(argv); 
-    })
+        async (argv) => {
+            setLoggingLevel(argv);
+            await ndjsonBundle(argv);
+        }
+    )
     .command(
         'unbundle',
         'Unbundle single .ndjson file into multiple .json files',
-    {
-        dir: {
-            alias: 'd',
-            default: '.',
-            description: 'Target output directory',
-            type: 'string',
+        {
+            dir: {
+                alias: 'd',
+                default: '.',
+                description: 'Target output directory',
+                type: 'string',
+            },
+            file: {
+                alias: 'f',
+                default: 'objects.ndjson',
+                demandOption: true,
+                description: 'Input filename',
+                type: 'string',
+            },
+            name: {
+                alias: 'n',
+                description: 'Output filename prefix',
+                type: 'array',
+            },
+            pretty: {
+                alias: 'y',
+                default: true,
+                description: 'Pretty-print output files',
+            },
         },
-        file: {
-            alias: 'f',
-            default: 'objects.ndjson',
-            demandOption: true,
-            description: 'Input filename',
-            type: 'string',
-        },
-        name: {
-            alias: 'n',
-            description: 'Output filename prefix',
-            type: 'array',
-        },
-        pretty: {
-            alias: 'y',
-            default: true,
-            description: 'Pretty-print output files'
+        async (argv) => {
+            setLoggingLevel(argv);
+            await ndjsonUnbundle(argv);
         }
-    },
-    async (argv) => {
-        setLoggingLevel(argv);
-        await ndjsonUnbundle(argv);
-    })
+    )
     // .option('test', {
     //   description: 'Test mode, only print to console',
     //   type: 'boolean',
@@ -267,5 +294,5 @@ const argv = yargs
         description: 'Log in verbose mode',
         type: 'boolean',
     })
-    .help().alias('help', 'h')
-    .argv;
+    .help()
+    .alias('help', 'h').argv;
