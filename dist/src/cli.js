@@ -27,10 +27,10 @@ const ndjsonBundle_1 = __importDefault(require("../lib/ndjsonBundle"));
 const promises_1 = require("fs/promises");
 const yargs_1 = __importDefault(require("yargs"));
 const logger_1 = __importDefault(require("../lib/logger"));
+const ramda_1 = require("ramda");
 const log = logger_1.default.label('cli');
 // adjust logger level if command-line arguments were given
-const setLoggingLevel = (argv) => {
-    const { debug, verbose } = argv;
+const setLoggingLevel = ({ debug, verbose }) => {
     log.level = debug ? 'debug' : verbose ? 'verbose' : 'info';
 };
 /**
@@ -46,8 +46,9 @@ const readObjectFromFile = (file) => __awaiter(void 0, void 0, void 0, function*
         return JSON.parse(buffer.toString());
     }
     catch (err) {
-        // Expand on failures, can fail separately on read or parse
-        log.error(`${err}: ${file}`);
+        // Expand on failures, can fail on read or parse
+        log.error(`File not found: ${file}`);
+        log.debug(err);
     }
 });
 /**
@@ -69,7 +70,8 @@ const writeObjectToFile = (object, { file, pretty, }) => __awaiter(void 0, void 
         yield (0, promises_1.writeFile)(file, data);
     }
     catch (err) {
-        log.error(`${err}: ${file}`);
+        log.error(`Failed to write file: ${file}`);
+        log.debug(`${err}`);
     }
 });
 /**
@@ -93,7 +95,8 @@ const writeEntriesToFiles = (entries, { dir, pretty, }) => __awaiter(void 0, voi
         }));
     }
     catch (err) {
-        log.error(`${err}: ${dir}`);
+        log.error(`Failed to write files to directory: ${dir}`);
+        log.debug(err);
     }
 });
 /**
@@ -109,7 +112,9 @@ const writeEntriesToFiles = (entries, { dir, pretty, }) => __awaiter(void 0, voi
 const readEntriesFromDirectory = (dir, extension, sort) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, e_1, _b, _c;
     const entries = [];
-    log.verbose(`Trimming extension: ${extension}`);
+    extension
+        ? log.verbose(`Trimming extension: ${extension}`)
+        : log.verbose(`No extension to trim`);
     // Helper function to trim file extensions
     const trimExtension = (s) => extension == undefined ? s : s.substring(0, s.lastIndexOf(extension));
     try {
@@ -139,7 +144,8 @@ const readEntriesFromDirectory = (dir, extension, sort) => __awaiter(void 0, voi
         }
     }
     catch (err) {
-        log.error(`${err}: ${dir}`);
+        log.error(`Directory not found: ${dir}`);
+        log.debug(`${err}`);
     }
     return sort ? entries.sort() : entries;
 });
@@ -181,7 +187,9 @@ const argv = yargs_1.default
     setLoggingLevel(argv);
     log.verbose(`Merging files '${argv.dir}/*.json' into file '${argv.file}'`);
     const entries = yield readEntriesFromDirectory(argv.dir, argv.trim, argv.sort);
-    yield writeObjectToFile((0, jsonMerge_1.default)(entries, argv.filter), argv);
+    log.debug(JSON.stringify(entries));
+    if (!(0, ramda_1.isEmpty)(entries))
+        yield writeObjectToFile((0, jsonMerge_1.default)(entries, argv.filter), argv);
 }))
     .command('split <file> [dir]', 'Splits single-object .json <file> into multiple [dir]/${key}.json files. ', (yargs) => yargs
     .positional('file', {
@@ -208,7 +216,8 @@ const argv = yargs_1.default
     setLoggingLevel(argv);
     log.verbose(`Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`);
     const object = yield readObjectFromFile(argv.file);
-    yield writeEntriesToFiles((0, jsonSplit_1.default)(object, argv.filter), argv);
+    if (object)
+        yield writeEntriesToFiles((0, jsonSplit_1.default)(object, argv.filter), argv);
 }))
     .command('bundle <dir> [file]', 'Bundles multiple <dir>/*.json files into one [file].ndjson file', (yargs) => yargs
     .positional('dir', {
@@ -263,7 +272,7 @@ const argv = yargs_1.default
     type: 'boolean',
 })
     .strictCommands()
-    .demandCommand(1)
+    .demandCommand()
     .wrap(yargs_1.default.terminalWidth())
     .help().alias('help', 'h')
     .epilog('Use --help with any command to see additional options, e.g. json-remix split --help')

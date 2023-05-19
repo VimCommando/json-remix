@@ -7,12 +7,12 @@ import { mkdir, opendir, readFile, writeFile } from 'fs/promises';
 import yargs, { Arguments } from 'yargs';
 import logger from '../lib/logger';
 import { Entry } from '../lib/types';
+import { isEmpty } from 'ramda';
 
 const log = logger.label('cli');
 
 // adjust logger level if command-line arguments were given
-const setLoggingLevel = (argv: Arguments) => {
-    const { debug, verbose } = argv;
+const setLoggingLevel = ({ debug, verbose }: Arguments) => {
     log.level = debug ? 'debug' : verbose ? 'verbose' : 'info';
 };
 
@@ -28,8 +28,9 @@ const readObjectFromFile = async (file: string) => {
         const buffer = await readFile(file, 'binary');
         return JSON.parse(buffer.toString());
     } catch (err) {
-        // Expand on failures, can fail separately on read or parse
-        log.error(`${err}: ${file}`);
+        // Expand on failures, can fail on read or parse
+        log.error(`File not found: ${file}`);
+        log.debug(err);
     }
 };
 
@@ -61,7 +62,8 @@ const writeObjectToFile = async (
         log.debug(`Writing ${pretty ? 'pretty' : 'one-line'} file ${file}`);
         await writeFile(file, data);
     } catch (err) {
-        log.error(`${err}: ${file}`);
+        log.error(`Failed to write file: ${file}`);
+        log.debug(`${err}`);
     }
 };
 
@@ -94,7 +96,8 @@ const writeEntriesToFiles = async (
             await writeObjectToFile(object, { file: `${dir}/${key}.json`, pretty });
         });
     } catch (err) {
-        log.error(`${err}: ${dir}`);
+        log.error(`Failed to write files to directory: ${dir}`);
+        log.debug(err);
     }
 };
 
@@ -115,7 +118,10 @@ const readEntriesFromDirectory = async (
 ): Promise<Entry[]> => {
     const entries: Entry[] = [];
 
-    log.verbose(`Trimming extension: ${extension}`);
+    extension
+        ? log.verbose(`Trimming extension: ${extension}`)
+        : log.verbose(`No extension to trim`);
+
     // Helper function to trim file extensions
     const trimExtension = (s: string) =>
         extension == undefined ? s : s.substring(0, s.lastIndexOf(extension));
@@ -129,7 +135,8 @@ const readEntriesFromDirectory = async (
             entries.push([name, object]);
         }
     } catch (err) {
-        log.error(`${err}: ${dir}`);
+        log.error(`Directory not found: ${dir}`);
+        log.debug(`${err}`);
     }
 
     return sort ? entries.sort() : entries;
@@ -184,7 +191,9 @@ const argv = yargs
                 argv.trim,
                 argv.sort
             );
-            await writeObjectToFile(jsonMerge(entries, argv.filter), argv);
+            log.debug(JSON.stringify(entries));
+            if (!isEmpty(entries))
+                await writeObjectToFile(jsonMerge(entries, argv.filter), argv);
         }
     )
     .command(
@@ -219,7 +228,8 @@ const argv = yargs
                 `Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`
             );
             const object: object = await readObjectFromFile(argv.file);
-            await writeEntriesToFiles(jsonSplit(object, argv.filter), argv);
+            if (object)
+                await writeEntriesToFiles(jsonSplit(object, argv.filter), argv);
         }
     )
     .command(
@@ -287,7 +297,7 @@ const argv = yargs
         type: 'boolean',
     })
     .strictCommands()
-    .demandCommand(1)
+    .demandCommand()
     .wrap(yargs.terminalWidth())
     .help().alias('help', 'h')
     .epilog('Use --help with any command to see additional options, e.g. json-remix split --help')

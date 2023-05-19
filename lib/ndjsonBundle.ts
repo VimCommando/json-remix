@@ -35,7 +35,8 @@ const bundleNdjson = async ({ file, dir }: { file: string, dir: string }) => {
             console.log(SyntaxError);
             log.warn(`Failed to parse: ${file}: ${SyntaxError}`);
         } else {
-            log.error(`${err}: ${file}`);
+            log.error(`Directory not found: ${dir}`);
+            log.debug(err);
         }
     }
 }

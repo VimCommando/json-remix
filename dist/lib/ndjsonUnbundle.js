@@ -58,7 +58,8 @@ const ndjsonUnbundle = ({ file, dir, pretty, name, }) => __awaiter(void 0, void 
             log.warn(`Failed to parse: ${file}: ${SyntaxError}`);
         }
         else {
-            log.error(`${err}: ${file}`);
+            log.error(`File not found: ${file}`);
+            log.debug(err);
         }
     }
 });

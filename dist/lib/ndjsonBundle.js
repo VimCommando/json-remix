@@ -73,7 +73,8 @@ const bundleNdjson = ({ file, dir }) => __awaiter(void 0, void 0, void 0, functi
             log.warn(`Failed to parse: ${file}: ${SyntaxError}`);
         }
         else {
-            log.error(`${err}: ${file}`);
+            log.error(`Directory not found: ${dir}`);
+            log.debug(err);
         }
     }
 });
