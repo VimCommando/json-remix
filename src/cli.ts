@@ -138,81 +138,42 @@ const readEntriesFromDirectory = async (
 // Configure command-line arguments
 const argv = yargs
     .command(
-        'split',
-        'Splits single-object .json file object into multiple ${key}.json files. ',
-        {
-            dir: {
-                alias: 'd',
-                default: '.',
-                description: 'Target output directory',
-                type: 'string',
-            },
-            file: {
-                alias: 'f',
-                demandOption: true,
-                description: 'Input filename',
-                type: 'string',
-            },
-            filter: {
-                alias: 'r',
-                description: 'Only split keys matching regex filter',
-                type: 'string',
-            },
-            pretty: {
-                alias: 'y',
-                default: true,
-                description: 'Pretty-print output files',
-                type: 'boolean',
-            },
-        },
-        async (argv) => {
-            setLoggingLevel(argv);
-            log.verbose(
-                `Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`
-            );
-            const object: object = await readObjectFromFile(argv.file);
-            await writeEntriesToFiles(jsonSplit(object, argv.filter), argv);
-        }
-    )
-    .command(
-        'merge',
-        'Merges multiple single-object ${key}.json files into one object.json file. ',
-        {
-            dir: {
-                alias: 'd',
+        'merge <dir> [file]',
+        'Merges multiple single-object <dir>/${key}.json files into one [file].json file. ',
+        (yargs) => yargs
+            .positional('dir', {
                 demandOption: true,
                 description: 'Target input directory',
                 type: 'string',
-            },
-            file: {
-                alias: 'f',
+            })
+            .positional('file', {
                 default: 'object.json',
                 description: 'Output filename',
                 type: 'string',
-            },
-            filter: {
+            })
+            .option('filter', {
                 alias: 'r',
                 description: 'Only split keys matching regex filter',
                 type: 'string',
-            },
-            pretty: {
+            })
+            .option('pretty', {
                 alias: 'y',
                 default: true,
                 description: 'Pretty-print output files',
                 type: 'boolean',
-            },
-            sort: {
+            })
+            .option('sort', {
                 alias: 's',
                 default: false,
                 description: 'Alphabetically sort object keys',
                 type: 'boolean',
-            },
-            trim: {
+            })
+            .option('trim', {
                 alias: 't',
                 description: 'File extension to trim from object key names',
                 type: 'string',
-            },
-        },
+            })
+        ,
         async (argv) => {
             setLoggingLevel(argv);
             log.verbose(
@@ -227,55 +188,86 @@ const argv = yargs
         }
     )
     .command(
-        'bundle',
-        'Bundles multiple .json files into one .ndjson file',
-        {
-            dir: {
-                alias: 'd',
+        'split <file> [dir]',
+        'Splits single-object .json <file> into multiple [dir]/${key}.json files. ',
+        (yargs) => yargs
+            .positional('file', {
+                demandOption: true,
+                description: 'Input filename',
+                type: 'string',
+            })
+            .positional('dir', {
+                default: '.',
+                description: 'Target output directory',
+                type: 'string',
+            })
+            .option('filter', {
+                alias: 'r',
+                description: 'Only split keys matching regex filter',
+                type: 'string',
+            })
+            .option('pretty', {
+                alias: 'y',
+                default: true,
+                description: 'Pretty-print output files',
+                type: 'boolean',
+            })
+        ,
+        async (argv) => {
+            setLoggingLevel(argv);
+            log.verbose(
+                `Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`
+            );
+            const object: object = await readObjectFromFile(argv.file);
+            await writeEntriesToFiles(jsonSplit(object, argv.filter), argv);
+        }
+    )
+    .command(
+        'bundle <dir> [file]',
+        'Bundles multiple <dir>/*.json files into one [file].ndjson file',
+        (yargs) => yargs
+            .positional('dir', {
                 demandOption: true,
                 description: 'Target input directory',
                 type: 'string',
-            },
-            file: {
-                alias: 'f',
+            })
+            .positional('file', {
                 default: 'merged_objects.ndjson',
                 description: 'Output filename',
                 type: 'string',
-            },
-        },
+            })
+        ,
         async (argv) => {
             setLoggingLevel(argv);
             await ndjsonBundle(argv);
         }
     )
     .command(
-        'unbundle',
-        'Unbundle single .ndjson file into multiple .json files',
-        {
-            dir: {
-                alias: 'd',
+        'unbundle <file> [dir]',
+        'Unbundle single <file>.ndjson file into multiple [dir]/*.json files',
+        (yargs) => yargs
+            .positional('dir', {
                 default: '.',
                 description: 'Target output directory',
                 type: 'string',
-            },
-            file: {
-                alias: 'f',
+            })
+            .positional('file', {
                 default: 'objects.ndjson',
                 demandOption: true,
                 description: 'Input filename',
                 type: 'string',
-            },
-            name: {
+            })
+            .option('name', {
                 alias: 'n',
                 description: 'Output filename prefix',
                 type: 'array',
-            },
-            pretty: {
+            })
+            .option('pretty', {
                 alias: 'y',
                 default: true,
                 description: 'Pretty-print output files',
-            },
-        },
+            })
+        ,
         async (argv) => {
             setLoggingLevel(argv);
             await ndjsonUnbundle(argv);
@@ -294,5 +286,9 @@ const argv = yargs
         description: 'Log in verbose mode',
         type: 'boolean',
     })
-    .help()
-    .alias('help', 'h').argv;
+    .strictCommands()
+    .demandCommand(1)
+    .wrap(yargs.terminalWidth())
+    .help().alias('help', 'h')
+    .epilog('Use --help with any command to see additional options, e.g. json-remix split --help')
+    .argv;
