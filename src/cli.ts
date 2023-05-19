@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env node
 import jsonMerge from '../lib/jsonMerge';
 import jsonSplit from '../lib/jsonSplit';
 import ndjsonUnbundle from '../lib/ndjsonUnbundle';

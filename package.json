@@ -1,9 +1,8 @@
 {
   "name": "@vim_commando/json-remix",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Split and/or merge large single-object .json or multi-object .ndjson files",
   "main": "bin/json-remix.js",
-  "bin": "bin/json-remix.js",
   "scripts": {
     "test": "test"
   },
@@ -14,8 +13,14 @@
   ],
   "author": "Ryan Eno",
   "license": "Apache-2.0",
+  "bin": {
+    "json-remix": "bin/json-remix.js"
+  },
+  "preferGlobal": true,
   "dependencies": {
     "ramda": "^0.29.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4",
     "winston": "^3.2.1",
     "yargs": "^17.7.1"
   },
@@ -28,9 +33,7 @@
   "devDependencies": {
     "@types/node": "^18.15.11",
     "@types/ramda": "^0.28.24",
-    "@types/yargs": "^17.0.24",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "@types/yargs": "^17.0.24"
   },
   "directories": {
     "lib": "lib",
