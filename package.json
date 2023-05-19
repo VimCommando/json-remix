@@ -1,6 +1,6 @@
 {
   "name": "@vim_commando/json-remix",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Split and/or merge large single-object .json or multi-object .ndjson files",
   "main": "bin/json-remix.js",
   "scripts": {
@@ -16,7 +16,6 @@
   "bin": {
     "json-remix": "bin/json-remix.js"
   },
-  "type": "module",
   "dependencies": {
     "ramda": "^0.29.0",
     "ts-node": "^10.9.1",
