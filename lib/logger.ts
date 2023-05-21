@@ -2,7 +2,7 @@ import { createLogger, format, transports } from 'winston';
 
 const label = (label: any) =>
     createLogger({
-        level: 'info',
+        level: process.env.LOG_LEVEL,
         format: format.combine(
             format.colorize(),
             format.label({ label }),

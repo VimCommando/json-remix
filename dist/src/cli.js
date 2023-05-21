@@ -21,11 +21,9 @@ const yargs_1 = __importDefault(require("yargs"));
 const logger_1 = __importDefault(require("../lib/logger"));
 const ramda_1 = require("ramda");
 const file_1 = require("../lib/file");
+// to adjust logger level set an environment variable, e.g.:
+// `export LOG_LEVEL=debug` before running the command
 const log = logger_1.default.label('cli');
-// adjust logger level if command-line arguments were given
-const setLoggingLevel = ({ debug, verbose }) => {
-    log.level = debug ? 'debug' : verbose ? 'verbose' : 'info';
-};
 // Configure command-line arguments
 const argv = yargs_1.default
     .command('merge <dir> [file]', 'Merges multiple single-object <dir>/${key}.json files into one [file].json file. ', (yargs) => yargs
@@ -61,7 +59,6 @@ const argv = yargs_1.default
     description: 'File extension to trim from object key names',
     type: 'string',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
-    setLoggingLevel(argv);
     log.verbose(`Merging files '${argv.dir}/*.json' into file '${argv.file}'`);
     const entries = yield (0, file_1.readEntriesFromDirectory)(argv.dir, argv.trim, argv.sort);
     log.debug(JSON.stringify(entries));
@@ -90,7 +87,6 @@ const argv = yargs_1.default
     description: 'Pretty-print output files',
     type: 'boolean',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
-    setLoggingLevel(argv);
     log.verbose(`Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`);
     const object = yield (0, file_1.readObjectFromFile)(argv.file);
     if (object)
@@ -107,7 +103,6 @@ const argv = yargs_1.default
     description: 'Output filename',
     type: 'string',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
-    setLoggingLevel(argv);
     yield (0, ndjsonBundle_1.default)(argv);
 }))
     .command('unbundle <file> [dir]', 'Unbundle single <file>.ndjson file into multiple [dir]/*.json files', (yargs) => yargs
@@ -132,22 +127,12 @@ const argv = yargs_1.default
     default: true,
     description: 'Pretty-print output files',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
-    setLoggingLevel(argv);
     yield (0, ndjsonUnbundle_1.default)(argv);
 }))
     // .option('test', {
     //   description: 'Test mode, only print to console',
     //   type: 'boolean',
     // })
-    .option('debug', {
-    description: 'Log in debug mode',
-    type: 'boolean',
-})
-    .option('verbose', {
-    alias: 'v',
-    description: 'Log in verbose mode',
-    type: 'boolean',
-})
     .strictCommands()
     .demandCommand()
     .wrap(yargs_1.default.terminalWidth())

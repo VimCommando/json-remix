@@ -13,12 +13,9 @@ import {
     writeObjectToFile
 } from '../lib/file';
 
+// to adjust logger level set an environment variable, e.g.:
+// `export LOG_LEVEL=debug` before running the command
 const log = logger.label('cli');
-
-// adjust logger level if command-line arguments were given
-const setLoggingLevel = ({ debug, verbose }: Arguments) => {
-    log.level = debug ? 'debug' : verbose ? 'verbose' : 'info';
-};
 
 // Configure command-line arguments
 const argv = yargs
@@ -60,7 +57,6 @@ const argv = yargs
             })
         ,
         async (argv) => {
-            setLoggingLevel(argv);
             log.verbose(
                 `Merging files '${argv.dir}/*.json' into file '${argv.file}'`
             );
@@ -101,7 +97,6 @@ const argv = yargs
             })
         ,
         async (argv) => {
-            setLoggingLevel(argv);
             log.verbose(
                 `Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`
             );
@@ -126,7 +121,6 @@ const argv = yargs
             })
         ,
         async (argv) => {
-            setLoggingLevel(argv);
             await ndjsonBundle(argv);
         }
     )
@@ -157,7 +151,6 @@ const argv = yargs
             })
         ,
         async (argv) => {
-            setLoggingLevel(argv);
             await ndjsonUnbundle(argv);
         }
     )
@@ -165,15 +158,6 @@ const argv = yargs
     //   description: 'Test mode, only print to console',
     //   type: 'boolean',
     // })
-    .option('debug', {
-        description: 'Log in debug mode',
-        type: 'boolean',
-    })
-    .option('verbose', {
-        alias: 'v',
-        description: 'Log in verbose mode',
-        type: 'boolean',
-    })
     .strictCommands()
     .demandCommand()
     .wrap(yargs.terminalWidth())
