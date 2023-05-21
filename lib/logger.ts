@@ -12,7 +12,9 @@ const label = (label: any) =>
                     `${log.timestamp} [${log.level}] \x1B[35m${log.label}\x1B[39m: ${log.message}`
             )
         ),
-        transports: [new transports.Console()],
+        transports: [new transports.Console({
+            stderrLevels: ['warn', 'error', 'verbose', 'debug', 'silly'],
+        })],
     });
 
 export default { label };

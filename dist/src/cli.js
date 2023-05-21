@@ -105,14 +105,14 @@ const argv = yargs_1.default
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, ndjsonBundle_1.default)(argv);
 }))
-    .command('unbundle <file> [dir]', 'Unbundle single <file>.ndjson file into multiple [dir]/*.json files', (yargs) => yargs
+    .command('unbundle [file] [dir]', 'Unbundle single [file].ndjson file into multiple [dir]/*.json files', (yargs) => yargs
     .positional('dir', {
-    default: '.',
+    default: '-',
     description: 'Target output directory',
     type: 'string',
 })
     .positional('file', {
-    default: 'objects.ndjson',
+    default: '-',
     demandOption: true,
     description: 'Input filename',
     type: 'string',

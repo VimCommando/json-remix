@@ -125,16 +125,16 @@ const argv = yargs
         }
     )
     .command(
-        'unbundle <file> [dir]',
-        'Unbundle single <file>.ndjson file into multiple [dir]/*.json files',
+        'unbundle [file] [dir]',
+        'Unbundle single [file].ndjson file into multiple [dir]/*.json files',
         (yargs) => yargs
             .positional('dir', {
-                default: '.',
+                default: '-',
                 description: 'Target output directory',
                 type: 'string',
             })
             .positional('file', {
-                default: 'objects.ndjson',
+                default: '-',
                 demandOption: true,
                 description: 'Input filename',
                 type: 'string',
