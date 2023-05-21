@@ -150,8 +150,8 @@ const ndjsonUnbundle = ({ file, dir, pretty, name, }) => __awaiter(void 0, void 
     }
     catch (err) {
         if (err instanceof SyntaxError) {
-            console.log(SyntaxError);
             log.warn(`Failed to parse: ${file}:${lineNumber}`);
+            log.debug(SyntaxError);
         }
         else {
             log.error(`File not found: ${file}`);

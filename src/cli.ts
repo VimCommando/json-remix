@@ -115,8 +115,8 @@ const argv = yargs
                 type: 'string',
             })
             .positional('file', {
-                default: 'merged_objects.ndjson',
-                description: 'Output filename',
+                default: '-',
+                description: 'Output filename (or stdout)',
                 type: 'string',
             })
         ,
@@ -130,13 +130,13 @@ const argv = yargs
         (yargs) => yargs
             .positional('dir', {
                 default: '-',
-                description: 'Target output directory',
+                description: 'Target output directory (or stdout)',
                 type: 'string',
             })
             .positional('file', {
                 default: '-',
                 demandOption: true,
-                description: 'Input filename',
+                description: 'Input filename (or stdin)',
                 type: 'string',
             })
             .option('name', {

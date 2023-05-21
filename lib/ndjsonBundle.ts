@@ -1,5 +1,7 @@
-import { opendir, readFile, writeFile } from 'fs/promises';
+import { opendir, readFile } from 'fs/promises';
+import * as readline from 'node:readline';
 import logger from './logger';
+import { createWriteStream } from 'fs';
 
 const log = logger.label('bundle');
 
@@ -16,28 +18,35 @@ const log = logger.label('bundle');
  * @throws {Error} - If there is any other error during the operation.
  */
 
-const bundleNdjson = async ({ file, dir }: { file: string, dir: string }) => {
-    let output = '';
-    let i = 0;
-    try {
-        const directory = await opendir(dir);
-        for await (const dirent of directory) {
+const bundleNdjson = async ({ file, dir }: { file: string, dir: string }): Promise<void> => {
+    const stdout = file === '-';
+
+    let objectCount = 0;
+
+    const output = stdout ? undefined : createWriteStream(file);
+    const directory = await opendir(dir);
+    log.debug(`Writing to ${stdout ? 'stdout' : file}`)
+    for await (const dirent of directory) {
+        try {
             const buffer = await readFile(`${dir}/${dirent.name}`, 'binary');
+            const data = JSON.stringify(JSON.parse(buffer));
             log.debug(`Bundling '${dir}/${dirent.name}'`);
-            output += JSON.stringify(JSON.parse(buffer)) + '\n';
-            i++;
-        }
-        const data = new Uint8Array(Buffer.from(output));
-        await writeFile(file, data);
-        log.verbose(`Wrote ${i} objects to ${file}`);
-    } catch (err) {
-        if (err instanceof SyntaxError) {
-            console.log(SyntaxError);
-            log.warn(`Failed to parse: ${file}: ${SyntaxError}`);
-        } else {
-            log.error(`Directory not found: ${dir}`);
-            log.debug(err);
+            if (output) {
+                output.write(data + '\n');
+            } else {
+                console.log(data);
+            }
+            objectCount++;
+        } catch (err) {
+            if (err instanceof SyntaxError) {
+                log.warn(`Failed to parse object ${objectCount}: ${file}`);
+                log.debug(SyntaxError);
+            } else {
+                log.error(`Directory not found: ${dir}`);
+                log.debug(err);
+            }
         }
     }
+    log.debug(`Wrote ${objectCount} objects to ${file}`);
 }
 export default bundleNdjson;

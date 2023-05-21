@@ -21,6 +21,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const promises_1 = require("fs/promises");
 const logger_1 = __importDefault(require("./logger"));
+const fs_1 = require("fs");
 const log = logger_1.default.label('bundle');
 /**
  * Bundles multiple JSON files in a directory into one NDJSON file.
@@ -36,46 +37,52 @@ const log = logger_1.default.label('bundle');
  */
 const bundleNdjson = ({ file, dir }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, e_1, _b, _c;
-    let output = '';
-    let i = 0;
+    const stdout = file === '-';
+    let objectCount = 0;
+    const output = stdout ? undefined : (0, fs_1.createWriteStream)(file);
+    const directory = yield (0, promises_1.opendir)(dir);
+    log.debug(`Writing to ${stdout ? 'stdout' : file}`);
     try {
-        const directory = yield (0, promises_1.opendir)(dir);
-        try {
-            for (var _d = true, directory_1 = __asyncValues(directory), directory_1_1; directory_1_1 = yield directory_1.next(), _a = directory_1_1.done, !_a;) {
-                _c = directory_1_1.value;
-                _d = false;
-                try {
-                    const dirent = _c;
-                    const buffer = yield (0, promises_1.readFile)(`${dir}/${dirent.name}`, 'binary');
-                    log.debug(`Bundling '${dir}/${dirent.name}'`);
-                    output += JSON.stringify(JSON.parse(buffer)) + '\n';
-                    i++;
-                }
-                finally {
-                    _d = true;
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
+        for (var _d = true, directory_1 = __asyncValues(directory), directory_1_1; directory_1_1 = yield directory_1.next(), _a = directory_1_1.done, !_a;) {
+            _c = directory_1_1.value;
+            _d = false;
             try {
-                if (!_d && !_a && (_b = directory_1.return)) yield _b.call(directory_1);
+                const dirent = _c;
+                try {
+                    const buffer = yield (0, promises_1.readFile)(`${dir}/${dirent.name}`, 'binary');
+                    const data = JSON.stringify(JSON.parse(buffer));
+                    log.debug(`Bundling '${dir}/${dirent.name}'`);
+                    if (output) {
+                        output.write(data + '\n');
+                    }
+                    else {
+                        console.log(data);
+                    }
+                    objectCount++;
+                }
+                catch (err) {
+                    if (err instanceof SyntaxError) {
+                        log.warn(`Failed to parse object ${objectCount}: ${file}`);
+                        log.debug(SyntaxError);
+                    }
+                    else {
+                        log.error(`Directory not found: ${dir}`);
+                        log.debug(err);
+                    }
+                }
             }
-            finally { if (e_1) throw e_1.error; }
-        }
-        const data = new Uint8Array(Buffer.from(output));
-        yield (0, promises_1.writeFile)(file, data);
-        log.verbose(`Wrote ${i} objects to ${file}`);
-    }
-    catch (err) {
-        if (err instanceof SyntaxError) {
-            console.log(SyntaxError);
-            log.warn(`Failed to parse: ${file}: ${SyntaxError}`);
-        }
-        else {
-            log.error(`Directory not found: ${dir}`);
-            log.debug(err);
+            finally {
+                _d = true;
+            }
         }
     }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (!_d && !_a && (_b = directory_1.return)) yield _b.call(directory_1);
+        }
+        finally { if (e_1) throw e_1.error; }
+    }
+    log.debug(`Wrote ${objectCount} objects to ${file}`);
 });
 exports.default = bundleNdjson;

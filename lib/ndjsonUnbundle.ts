@@ -105,8 +105,8 @@ const ndjsonUnbundle = async ({
         };
     } catch (err) {
         if (err instanceof SyntaxError) {
-            console.log(SyntaxError);
             log.warn(`Failed to parse: ${file}:${lineNumber}`);
+            log.debug(SyntaxError);
         } else {
             log.error(`File not found: ${file}`);
             log.debug(err);
