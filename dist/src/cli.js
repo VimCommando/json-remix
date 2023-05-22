@@ -20,8 +20,9 @@ const ndjsonBundle_1 = __importDefault(require("../lib/ndjsonBundle"));
 const yargs_1 = __importDefault(require("yargs"));
 const logger_1 = __importDefault(require("../lib/logger"));
 const file_1 = require("../lib/file");
-// to adjust logger level set an environment variable, e.g.:
-// `export LOG_LEVEL=debug` before running the command
+// To adjust logger level set an environment variable:
+// Example: `export LOG_LEVEL=debug`
+// Log messages default to stderr to not polute output
 const log = logger_1.default.label('cli');
 // Configure command-line arguments
 const argv = yargs_1.default
@@ -71,15 +72,15 @@ const argv = yargs_1.default
         yield (0, file_1.writeObjectToFile)(object, argv.output, argv.pretty);
     }
 }))
-    .command('split [file] [dir]', 'Splits single JSON object into multiple json objects. ', (yargs) => yargs
-    .positional('file', {
+    .command('split [input] [output]', 'Splits single JSON object into multiple json objects. ', (yargs) => yargs
+    .positional('input', {
     default: '-',
-    description: 'Input filename (or stdin)',
+    description: 'Input filename or `-` for stdin',
     type: 'string',
 })
-    .positional('dir', {
+    .positional('output', {
     default: '-',
-    description: 'Target output directory (or stdout)',
+    description: 'Target output directory or `-` for stdout',
     type: 'string',
 })
     .option('filter', {
@@ -93,16 +94,16 @@ const argv = yargs_1.default
     description: 'Pretty-print output files',
     type: 'boolean',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
-    const useStdin = argv.file === '-';
-    const useStdout = argv.dir === '-';
-    log.verbose(`Splitting ${useStdin ? 'stdin' : 'file ' + argv.file} ` +
-        `into ${useStdout ? 'stdout' : argv.dir + '/\${key}.json files'}`);
+    const useStdin = argv.input === '-';
+    const useStdout = argv.output === '-';
+    log.verbose(`Splitting ${useStdin ? 'stdin' : 'input ' + argv.input} ` +
+        `into ${useStdout ? 'stdout' : argv.output + `'/\${key}.json files'`}`);
     const writeEntries = (entries) => __awaiter(void 0, void 0, void 0, function* () {
         if (useStdout) {
             console.log(JSON.stringify(Object.fromEntries(entries), null, 4));
         }
         else {
-            yield (0, file_1.writeEntriesToFiles)(entries, argv.dir, argv.pretty);
+            yield (0, file_1.writeEntriesToFiles)(entries, argv.output, argv.pretty);
         }
     });
     if (useStdin) {
@@ -112,34 +113,34 @@ const argv = yargs_1.default
         }));
     }
     else {
-        log.debug(`Reading from ${argv.file}`);
-        const entries = (0, jsonSplit_1.default)(yield (0, file_1.readObjectFromFile)(argv.file), argv.filter);
+        log.debug(`Reading from ${argv.input}`);
+        const entries = (0, jsonSplit_1.default)(yield (0, file_1.readObjectFromFile)(argv.input), argv.filter);
         writeEntries(entries);
     }
 }))
-    .command('bundle <dir> [file]', 'Bundles multiple <dir>/*.json files into one [file].ndjson file', (yargs) => yargs
+    .command('bundle <dir> [output]', 'Bundles multiple <dir>/*.json files into one ndjson file', (yargs) => yargs
     .positional('dir', {
     demandOption: true,
     description: 'Target input directory',
     type: 'string',
 })
-    .positional('file', {
+    .positional('output', {
     default: '-',
-    description: 'Output filename (or stdout)',
+    description: 'Output filename or `-` for stdout',
     type: 'string',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, ndjsonBundle_1.default)(argv);
 }))
-    .command('unbundle [file] [dir]', 'Unbundle single [file].ndjson file into multiple [dir]/*.json files', (yargs) => yargs
-    .positional('dir', {
-    default: '-',
-    description: 'Target output directory (or stdout)',
-    type: 'string',
-})
-    .positional('file', {
+    .command('unbundle [intput] [output]', 'Unbundle single [input].ndjson file into multiple json objects', (yargs) => yargs
+    .positional('input', {
     default: '-',
     demandOption: true,
-    description: 'Input filename (or stdin)',
+    description: 'Input filename or `-` for stdin',
+    type: 'string',
+})
+    .positional('output', {
+    default: '-',
+    description: 'Target output directory or `-` for stdout',
     type: 'string',
 })
     .option('name', {
@@ -150,14 +151,10 @@ const argv = yargs_1.default
     .option('pretty', {
     alias: 'y',
     default: true,
-    description: 'Pretty-print output files',
+    description: 'Pretty-print output objects',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, ndjsonUnbundle_1.default)(argv);
 }))
-    // .option('test', {
-    //   description: 'Test mode, only print to console',
-    //   type: 'boolean',
-    // })
     .strictCommands()
     .demandCommand()
     .wrap(yargs_1.default.terminalWidth())

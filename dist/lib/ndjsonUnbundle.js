@@ -91,26 +91,26 @@ const getPrefix = (json, name) => {
  * @throws {SyntaxError} When the input file contains invalid JSON.
  * @throws {Error} When any other error occurs.
  */
-const ndjsonUnbundle = ({ file, dir, pretty, name, }) => __awaiter(void 0, void 0, void 0, function* () {
+const ndjsonUnbundle = ({ input, output, name, pretty, }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, e_1, _b, _c;
     const formatJson = pretty
         ? (o) => JSON.stringify(o, null, 4)
         : (o) => JSON.stringify(o);
     let lineNumber = 0; // top scope so we can use in error handling
     try {
-        const input = file === '-' ? process.stdin : (0, fs_1.createReadStream)(file);
-        const output = dir === '-' ? process.stdout : undefined;
+        const inputStream = input === '-' ? process.stdin : (0, fs_1.createReadStream)(input);
+        const outputStream = output === '-' ? process.stdout : undefined;
         const rl = readline.createInterface({
-            input,
-            output,
+            input: inputStream,
+            output: outputStream,
             terminal: false,
             crlfDelay: Infinity, // ensures we only get one line break
         });
-        if (!output) {
-            log.debug(`Creating directory: ${dir}`);
-            yield (0, promises_1.mkdir)(dir, { recursive: true });
+        if (!outputStream) {
+            log.debug(`Creating directory: ${output}`);
+            yield (0, promises_1.mkdir)(output, { recursive: true });
         }
-        log.verbose(`Unbundling ${file === '-' ? 'stdin' : file} to ${dir === '-' ? 'stdout' : dir + '/'}`);
+        log.verbose(`Unbundling ${input === '-' ? 'stdin' : input} to ${output === '-' ? 'stdout' : output + '/'}`);
         try {
             for (var _d = true, rl_1 = __asyncValues(rl), rl_1_1; rl_1_1 = yield rl_1.next(), _a = rl_1_1.done, !_a;) {
                 _c = rl_1_1.value;
@@ -124,14 +124,14 @@ const ndjsonUnbundle = ({ file, dir, pretty, name, }) => __awaiter(void 0, void 
                     const prefix = getPrefix(json, name);
                     const number = lineNumber.toString().padStart(6, '0');
                     const filename = prefix ? `${prefix}.json` : `object-${number}.json`;
-                    if (output) {
+                    if (outputStream) {
                         console.log(JSON.stringify(json, null, 2));
                     }
                     else {
                         log.silly(`unbundle: ${JSON.stringify(json, null, 2)}`);
                         log.debug(`Writing ${pretty ? 'pretty' : 'one-line'} file ${filename}`);
                         const data = new Uint8Array(Buffer.from(formatJson(json)));
-                        yield (0, promises_1.writeFile)(`${dir}/${filename}`, data);
+                        yield (0, promises_1.writeFile)(`${output}/${filename}`, data);
                     }
                 }
                 finally {
@@ -150,11 +150,11 @@ const ndjsonUnbundle = ({ file, dir, pretty, name, }) => __awaiter(void 0, void 
     }
     catch (err) {
         if (err instanceof SyntaxError) {
-            log.warn(`Failed to parse: ${file}:${lineNumber}`);
+            log.warn(`Failed to parse: ${input}:${lineNumber}`);
             log.debug(SyntaxError);
         }
         else {
-            log.error(`File not found: ${file}`);
+            log.error(`File not found: ${input}`);
             log.debug(err);
         }
     }

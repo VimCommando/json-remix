@@ -29,19 +29,19 @@ const log = logger_1.default.label('bundle');
  * @async
  * @function bundleNdjson
  * @param {Object} options - The options object.
- * @param {string} options.file - The output filename.
+ * @param {string} options.output - The output name.
  * @param {string} options.dir - The directory containing the input files.
  * @returns {Promise<void>} - A Promise that resolves when the operation completes.
  * @throws {SyntaxError} - If there is an error parsing the input files.
  * @throws {Error} - If there is any other error during the operation.
  */
-const bundleNdjson = ({ file, dir }) => __awaiter(void 0, void 0, void 0, function* () {
+const bundleNdjson = ({ output, dir }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, e_1, _b, _c;
-    const stdout = file === '-';
+    const stdout = output === '-';
     let objectCount = 0;
-    const output = stdout ? undefined : (0, fs_1.createWriteStream)(file);
+    const outputStream = stdout ? undefined : (0, fs_1.createWriteStream)(output);
     const directory = yield (0, promises_1.opendir)(dir);
-    log.debug(`Writing to ${stdout ? 'stdout' : file}`);
+    log.debug(`Writing to ${stdout ? 'stdout' : output}`);
     try {
         for (var _d = true, directory_1 = __asyncValues(directory), directory_1_1; directory_1_1 = yield directory_1.next(), _a = directory_1_1.done, !_a;) {
             _c = directory_1_1.value;
@@ -52,8 +52,8 @@ const bundleNdjson = ({ file, dir }) => __awaiter(void 0, void 0, void 0, functi
                     const buffer = yield (0, promises_1.readFile)(`${dir}/${dirent.name}`, 'binary');
                     const data = JSON.stringify(JSON.parse(buffer));
                     log.debug(`Bundling '${dir}/${dirent.name}'`);
-                    if (output) {
-                        output.write(data + '\n');
+                    if (outputStream) {
+                        outputStream.write(data + '\n');
                     }
                     else {
                         console.log(data);
@@ -62,7 +62,7 @@ const bundleNdjson = ({ file, dir }) => __awaiter(void 0, void 0, void 0, functi
                 }
                 catch (err) {
                     if (err instanceof SyntaxError) {
-                        log.warn(`Failed to parse object ${objectCount}: ${file}`);
+                        log.warn(`Failed to parse object ${objectCount}: ${output}`);
                         log.debug(SyntaxError);
                     }
                     else {
@@ -83,6 +83,6 @@ const bundleNdjson = ({ file, dir }) => __awaiter(void 0, void 0, void 0, functi
         }
         finally { if (e_1) throw e_1.error; }
     }
-    log.debug(`Wrote ${objectCount} objects to ${file}`);
+    log.debug(`Wrote ${objectCount} objects to ${output}`);
 });
 exports.default = bundleNdjson;

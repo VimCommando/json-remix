@@ -83,9 +83,9 @@ const argv = yargs
         'split [input] [output]',
         'Splits single JSON object into multiple json objects. ',
         (yargs) => yargs
-            .positional('file', {
+            .positional('input', {
                 default: '-',
-                description: 'Input filename or `-` for stdin)',
+                description: 'Input filename or `-` for stdin',
                 type: 'string',
             })
             .positional('output', {
@@ -109,7 +109,7 @@ const argv = yargs
             const useStdin = argv.input === '-';
             const useStdout = argv.output === '-';
             log.verbose(
-                `Splitting ${useStdin ? 'stdin' : 'input ' + argv.file} ` +
+                `Splitting ${useStdin ? 'stdin' : 'input ' + argv.input} ` +
                 `into ${useStdout ? 'stdout' : argv.output + `'/\${key}.json files'`}`
             );
 
@@ -128,14 +128,14 @@ const argv = yargs
                 })
             } else {
                 log.debug(`Reading from ${argv.input}`);
-                const entries = jsonSplit(await readObjectFromFile(argv.file), argv.filter);
+                const entries = jsonSplit(await readObjectFromFile(argv.input), argv.filter);
                 writeEntries(entries)
             }
         }
     )
     .command(
         'bundle <dir> [output]',
-        'Bundles multiple <dir>/*.json files into one [file].ndjson file',
+        'Bundles multiple <dir>/*.json files into one ndjson file',
         (yargs) => yargs
             .positional('dir', {
                 demandOption: true,
@@ -144,7 +144,7 @@ const argv = yargs
             })
             .positional('output', {
                 default: '-',
-                description: 'Output filename (or stdout)',
+                description: 'Output filename or `-` for stdout',
                 type: 'string',
             })
         ,
@@ -159,7 +159,7 @@ const argv = yargs
             .positional('input', {
                 default: '-',
                 demandOption: true,
-                description: 'Input filename or `-` for stdin)',
+                description: 'Input filename or `-` for stdin',
                 type: 'string',
             })
             .positional('output', {
