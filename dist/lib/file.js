@@ -22,6 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.readEntriesFromDirectory = exports.writeEntriesToFiles = exports.writeObjectToFile = exports.readObjectFromFile = void 0;
 const promises_1 = require("fs/promises");
 const logger_1 = __importDefault(require("../lib/logger"));
+const ramda_1 = require("ramda");
 const log = logger_1.default.label('file');
 /**
  * Reads a JSON object from a file.
@@ -51,7 +52,9 @@ exports.readObjectFromFile = readObjectFromFile;
  * with 4-space indentation for readability.
  * @throws If there is an error writing the file.
  */
-const writeObjectToFile = (object, { file, pretty, }) => __awaiter(void 0, void 0, void 0, function* () {
+const writeObjectToFile = (object, file, pretty) => __awaiter(void 0, void 0, void 0, function* () {
+    if ((0, ramda_1.isEmpty)(object))
+        return; // don't write empty files
     const formatJson = pretty
         ? (o) => JSON.stringify(o, null, 2)
         : (o) => JSON.stringify(o);
@@ -75,7 +78,8 @@ exports.writeObjectToFile = writeObjectToFile;
  * with 4-space indentation for readability.
  * @throws If there is an error creating the directory or writing any of the files.
  */
-const writeEntriesToFiles = (entries, { dir, pretty, }) => __awaiter(void 0, void 0, void 0, function* () {
+const writeEntriesToFiles = (entries, dir, pretty) => __awaiter(void 0, void 0, void 0, function* () {
+    log.silly(JSON.stringify(entries, null, 2));
     // Don't create the directory if it is the present working directory
     try {
         if (dir !== '.') {
@@ -83,7 +87,7 @@ const writeEntriesToFiles = (entries, { dir, pretty, }) => __awaiter(void 0, voi
             yield (0, promises_1.mkdir)(dir, { recursive: true });
         }
         entries.map(([key, object]) => __awaiter(void 0, void 0, void 0, function* () {
-            yield (0, exports.writeObjectToFile)(object, { file: `${dir}/${key}.json`, pretty });
+            yield (0, exports.writeObjectToFile)(object, `${dir}/${key}.json`, pretty);
         }));
     }
     catch (err) {

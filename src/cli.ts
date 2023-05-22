@@ -3,38 +3,39 @@ import jsonMerge from '../lib/jsonMerge';
 import jsonSplit from '../lib/jsonSplit';
 import ndjsonUnbundle from '../lib/ndjsonUnbundle';
 import ndjsonBundle from '../lib/ndjsonBundle';
-import yargs, { Arguments } from 'yargs';
+import yargs from 'yargs';
 import logger from '../lib/logger';
-import { isEmpty } from 'ramda';
 import {
     readEntriesFromDirectory,
     readObjectFromFile,
     writeEntriesToFiles,
     writeObjectToFile
 } from '../lib/file';
+import { Entry } from '../lib/types';
 
-// to adjust logger level set an environment variable, e.g.:
-// `export LOG_LEVEL=debug` before running the command
+// To adjust logger level set an environment variable:
+// Example: `export LOG_LEVEL=debug`
+// Log messages default to stderr to not polute output
 const log = logger.label('cli');
 
 // Configure command-line arguments
 const argv = yargs
     .command(
-        'merge <dir> [file]',
-        'Merges multiple single-object <dir>/${key}.json files into one [file].json file. ',
+        'merge <dir> [output]',
+        'Merges multiple single-object <dir>/${key}.json files into one json object. ',
         (yargs) => yargs
             .positional('dir', {
                 demandOption: true,
                 description: 'Target input directory',
                 type: 'string',
             })
-            .positional('file', {
-                default: 'object.json',
-                description: 'Output filename',
+            .positional('output', {
+                default: '-',
+                description: 'Output filename or `-` for stdout',
                 type: 'string',
             })
             .option('filter', {
-                alias: 'r',
+                alias: 'f',
                 description: 'Only split keys matching regex filter',
                 type: 'string',
             })
@@ -57,35 +58,43 @@ const argv = yargs
             })
         ,
         async (argv) => {
+            const useStdout = argv.output === '-';
             log.verbose(
-                `Merging files '${argv.dir}/*.json' into file '${argv.file}'`
+                `Merging files '${argv.dir}/*.json' ` +
+                `into ${useStdout ? 'stdout' : `'${argv.output}'`}`
             );
+
             const entries = await readEntriesFromDirectory(
                 argv.dir,
                 argv.trim,
                 argv.sort
             );
-            log.debug(JSON.stringify(entries));
-            if (!isEmpty(entries))
-                await writeObjectToFile(jsonMerge(entries, argv.filter), argv);
+
+            const object = jsonMerge(entries, argv.filter);
+            if (useStdout) {
+                console.log(JSON.stringify(object, null, 4));
+            } else {
+                log.silly(JSON.stringify(entries));
+                await writeObjectToFile(object, argv.output, argv.pretty);
+            }
         }
     )
     .command(
-        'split <file> [dir]',
-        'Splits single-object .json <file> into multiple [dir]/${key}.json files. ',
+        'split [input] [output]',
+        'Splits single JSON object into multiple json objects. ',
         (yargs) => yargs
             .positional('file', {
-                demandOption: true,
-                description: 'Input filename',
+                default: '-',
+                description: 'Input filename or `-` for stdin)',
                 type: 'string',
             })
-            .positional('dir', {
-                default: '.',
-                description: 'Target output directory',
+            .positional('output', {
+                default: '-',
+                description: 'Target output directory or `-` for stdout',
                 type: 'string',
             })
             .option('filter', {
-                alias: 'r',
+                alias: 'f',
                 description: 'Only split keys matching regex filter',
                 type: 'string',
             })
@@ -97,16 +106,35 @@ const argv = yargs
             })
         ,
         async (argv) => {
+            const useStdin = argv.input === '-';
+            const useStdout = argv.output === '-';
             log.verbose(
-                `Splitting file '${argv.file}' into '${argv.dir}/\${key}.json'`
+                `Splitting ${useStdin ? 'stdin' : 'input ' + argv.file} ` +
+                `into ${useStdout ? 'stdout' : argv.output + `'/\${key}.json files'`}`
             );
-            const object: object = await readObjectFromFile(argv.file);
-            if (object)
-                await writeEntriesToFiles(jsonSplit(object, argv.filter), argv);
+
+            const writeEntries = async (entries: Entry[]) => {
+                if (useStdout) {
+                    console.log(JSON.stringify(Object.fromEntries(entries), null, 4));
+                } else {
+                    await writeEntriesToFiles(entries, argv.output, argv.pretty);
+                }
+            }
+
+            if (useStdin) {
+                process.stdin.on('data', async (data) => {
+                    const entries = jsonSplit(JSON.parse(data.toString()), argv.filter);
+                    writeEntries(entries);
+                })
+            } else {
+                log.debug(`Reading from ${argv.input}`);
+                const entries = jsonSplit(await readObjectFromFile(argv.file), argv.filter);
+                writeEntries(entries)
+            }
         }
     )
     .command(
-        'bundle <dir> [file]',
+        'bundle <dir> [output]',
         'Bundles multiple <dir>/*.json files into one [file].ndjson file',
         (yargs) => yargs
             .positional('dir', {
@@ -114,7 +142,7 @@ const argv = yargs
                 description: 'Target input directory',
                 type: 'string',
             })
-            .positional('file', {
+            .positional('output', {
                 default: '-',
                 description: 'Output filename (or stdout)',
                 type: 'string',
@@ -125,18 +153,18 @@ const argv = yargs
         }
     )
     .command(
-        'unbundle [file] [dir]',
-        'Unbundle single [file].ndjson file into multiple [dir]/*.json files',
+        'unbundle [intput] [output]',
+        'Unbundle single [input].ndjson file into multiple json objects',
         (yargs) => yargs
-            .positional('dir', {
-                default: '-',
-                description: 'Target output directory (or stdout)',
-                type: 'string',
-            })
-            .positional('file', {
+            .positional('input', {
                 default: '-',
                 demandOption: true,
-                description: 'Input filename (or stdin)',
+                description: 'Input filename or `-` for stdin)',
+                type: 'string',
+            })
+            .positional('output', {
+                default: '-',
+                description: 'Target output directory or `-` for stdout',
                 type: 'string',
             })
             .option('name', {
@@ -147,17 +175,13 @@ const argv = yargs
             .option('pretty', {
                 alias: 'y',
                 default: true,
-                description: 'Pretty-print output files',
+                description: 'Pretty-print output objects',
             })
         ,
         async (argv) => {
             await ndjsonUnbundle(argv);
         }
     )
-    // .option('test', {
-    //   description: 'Test mode, only print to console',
-    //   type: 'boolean',
-    // })
     .strictCommands()
     .demandCommand()
     .wrap(yargs.terminalWidth())

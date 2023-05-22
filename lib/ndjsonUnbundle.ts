@@ -55,13 +55,13 @@ const getPrefix = (json: any, name?: (number | string)[]): string | undefined =>
  */
 
 const ndjsonUnbundle = async ({
-    file,
-    dir,
-    pretty,
+    input,
+    output,
     name,
+    pretty,
 }: {
-    dir: string;
-    file: string;
+    input: string;
+    output: string;
     name?: (string | number)[];
     pretty?: boolean;
 }) => {
@@ -71,21 +71,21 @@ const ndjsonUnbundle = async ({
     let lineNumber = 0; // top scope so we can use in error handling
 
     try {
-        const input = file === '-' ? process.stdin : createReadStream(file);
-        const output = dir === '-' ? process.stdout : undefined;
+        const inputStream = input === '-' ? process.stdin : createReadStream(input);
+        const outputStream = output === '-' ? process.stdout : undefined;
         const rl = readline.createInterface({
-            input,
-            output,
+            input: inputStream,
+            output: outputStream,
             terminal: false, // don't echo input lines to the output
             crlfDelay: Infinity, // ensures we only get one line break
         });
 
-        if (!output) {
-            log.debug(`Creating directory: ${dir}`);
-            await mkdir(dir, { recursive: true });
+        if (!outputStream) {
+            log.debug(`Creating directory: ${output}`);
+            await mkdir(output, { recursive: true });
         }
 
-        log.verbose(`Unbundling ${file === '-' ? 'stdin' : file} to ${dir === '-' ? 'stdout' : dir + '/'}`);
+        log.verbose(`Unbundling ${input === '-' ? 'stdin' : input} to ${output === '-' ? 'stdout' : output + '/'}`);
         for await (const line of rl) {
             ++lineNumber; // to keep valid line numbers, always increment
             if (!line || line === '') return; // only output defined and non-empty lines
@@ -94,21 +94,21 @@ const ndjsonUnbundle = async ({
             const number = lineNumber.toString().padStart(6, '0');
             const filename = prefix ? `${prefix}.json` : `object-${number}.json`;
 
-            if (output) {
+            if (outputStream) {
                 console.log(JSON.stringify(json, null, 2));
             } else {
                 log.silly(`unbundle: ${JSON.stringify(json, null, 2)}`);
                 log.debug(`Writing ${pretty ? 'pretty' : 'one-line'} file ${filename}`);
                 const data = new Uint8Array(Buffer.from(formatJson(json)));
-                await writeFile(`${dir}/${filename}`, data);
+                await writeFile(`${output}/${filename}`, data);
             }
         };
     } catch (err) {
         if (err instanceof SyntaxError) {
-            log.warn(`Failed to parse: ${file}:${lineNumber}`);
+            log.warn(`Failed to parse: ${input}:${lineNumber}`);
             log.debug(SyntaxError);
         } else {
-            log.error(`File not found: ${file}`);
+            log.error(`File not found: ${input}`);
             log.debug(err);
         }
     }

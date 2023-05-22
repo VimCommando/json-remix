@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const ramda_1 = require("ramda");
 const logger_1 = __importDefault(require("./logger"));
-const log = logger_1.default.label('divide');
+const log = logger_1.default.label('split');
 /**
  * Splits the given object into an array of key-value pairs (entries), optionally filtered by key.
  *

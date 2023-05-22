@@ -1,6 +1,7 @@
 import { mkdir, opendir, readFile, writeFile } from 'fs/promises';
 import { Entry } from '../lib/types';
 import logger from '../lib/logger';
+import { isEmpty } from 'ramda';
 const log = logger.label('file');
 
 /**
@@ -34,17 +35,15 @@ export const readObjectFromFile = async (file: string) => {
 
 export const writeObjectToFile = async (
     object: object,
-    {
-        file,
-        pretty,
-    }: {
-        file: string;
-        pretty?: boolean;
-    }
+    file: string,
+    pretty?: boolean,
 ) => {
+    if (isEmpty(object)) return; // don't write empty files
+
     const formatJson = pretty
         ? (o: object): string => JSON.stringify(o, null, 2)
         : (o: object): string => JSON.stringify(o);
+
 
     try {
         const data = new Uint8Array(Buffer.from(formatJson(object)));
@@ -68,14 +67,10 @@ export const writeObjectToFile = async (
 
 export const writeEntriesToFiles = async (
     entries: Entry[],
-    {
-        dir,
-        pretty,
-    }: {
-        dir: string;
-        pretty?: boolean;
-    }
+    dir: string,
+    pretty?: boolean,
 ) => {
+    log.silly(JSON.stringify(entries, null, 2));
     // Don't create the directory if it is the present working directory
     try {
         if (dir !== '.') {
@@ -83,7 +78,7 @@ export const writeEntriesToFiles = async (
             await mkdir(dir, { recursive: true });
         }
         entries.map(async ([key, object]: Entry) => {
-            await writeObjectToFile(object, { file: `${dir}/${key}.json`, pretty });
+            await writeObjectToFile(object, `${dir}/${key}.json`, pretty);
         });
     } catch (err) {
         log.error(`Failed to write files to directory: ${dir}`);

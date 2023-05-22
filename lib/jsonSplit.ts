@@ -2,7 +2,7 @@ import { pick, test } from 'ramda';
 import logger from './logger';
 import { Entry } from './types';
 
-const log = logger.label('divide');
+const log = logger.label('split');
 
 /**
  * Splits the given object into an array of key-value pairs (entries), optionally filtered by key.
