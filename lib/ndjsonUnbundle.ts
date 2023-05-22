@@ -17,6 +17,7 @@ const log = logger.label('unbundle');
  */
 
 const getPrefix = (json: any, name?: (number | string)[]): string | undefined => {
+    log.silly(`getPrefix name: ${name}`);
     if (!name) return undefined
 
     /**
@@ -31,11 +32,14 @@ const getPrefix = (json: any, name?: (number | string)[]): string | undefined =>
         .filter((x) => typeof x === 'string')
         .map((s) => (s as string).split('.'));
 
-    return paths
-        .map((path) => valueFrom(path, json))
+    log.silly(`getPrefix paths: ${JSON.stringify(paths, null, 2)}`);
+
+    const prefix = paths.map((path) => valueFrom(path, json))
         .filter((value) => !isNil(value))
-        .filter((value) => typeof value === 'string')
         .join('.');
+
+    log.silly(`getPrefix: ${prefix}`);
+    return prefix;
 }
 
 /**
@@ -71,8 +75,10 @@ const ndjsonUnbundle = async ({
     let lineNumber = 0; // top scope so we can use in error handling
 
     try {
-        const inputStream = input === '-' ? process.stdin : createReadStream(input);
-        const outputStream = output === '-' ? process.stdout : undefined;
+        const useStdin = input === '-';
+        const useStdout = output === '-';
+        const inputStream = useStdin ? process.stdin : createReadStream(input);
+        const outputStream = useStdout ? process.stdout : undefined;
         const rl = readline.createInterface({
             input: inputStream,
             output: outputStream,
@@ -85,7 +91,7 @@ const ndjsonUnbundle = async ({
             await mkdir(output, { recursive: true });
         }
 
-        log.verbose(`Unbundling ${input === '-' ? 'stdin' : input} to ${output === '-' ? 'stdout' : output + '/'}`);
+        log.verbose(`Unbundling ${useStdin ? 'stdin' : input} to ${useStdout ? 'stdout' : output + '/'}`);
         for await (const line of rl) {
             ++lineNumber; // to keep valid line numbers, always increment
             if (!line || line === '') return; // only output defined and non-empty lines
@@ -94,7 +100,7 @@ const ndjsonUnbundle = async ({
             const number = lineNumber.toString().padStart(6, '0');
             const filename = prefix ? `${prefix}.json` : `object-${number}.json`;
 
-            if (outputStream) {
+            if (useStdout) {
                 console.log(JSON.stringify(json, null, 2));
             } else {
                 log.silly(`unbundle: ${JSON.stringify(json, null, 2)}`);

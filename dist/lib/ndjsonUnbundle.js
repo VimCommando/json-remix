@@ -58,6 +58,7 @@ const log = logger_1.default.label('unbundle');
  * doesn't exist.
  */
 const getPrefix = (json, name) => {
+    log.silly(`getPrefix name: ${name}`);
     if (!name)
         return undefined;
     /**
@@ -70,11 +71,12 @@ const getPrefix = (json, name) => {
     const paths = name
         .filter((x) => typeof x === 'string')
         .map((s) => s.split('.'));
-    return paths
-        .map((path) => (0, ramda_1.path)(path, json))
+    log.silly(`getPrefix paths: ${JSON.stringify(paths, null, 2)}`);
+    const prefix = paths.map((path) => (0, ramda_1.path)(path, json))
         .filter((value) => !(0, ramda_1.isNil)(value))
-        .filter((value) => typeof value === 'string')
         .join('.');
+    log.silly(`getPrefix: ${prefix}`);
+    return prefix;
 };
 /**
  * Reads an NDJSON file and writes each object to a separate file.
@@ -98,8 +100,10 @@ const ndjsonUnbundle = ({ input, output, name, pretty, }) => __awaiter(void 0, v
         : (o) => JSON.stringify(o);
     let lineNumber = 0; // top scope so we can use in error handling
     try {
-        const inputStream = input === '-' ? process.stdin : (0, fs_1.createReadStream)(input);
-        const outputStream = output === '-' ? process.stdout : undefined;
+        const useStdin = input === '-';
+        const useStdout = output === '-';
+        const inputStream = useStdin ? process.stdin : (0, fs_1.createReadStream)(input);
+        const outputStream = useStdout ? process.stdout : undefined;
         const rl = readline.createInterface({
             input: inputStream,
             output: outputStream,
@@ -110,7 +114,7 @@ const ndjsonUnbundle = ({ input, output, name, pretty, }) => __awaiter(void 0, v
             log.debug(`Creating directory: ${output}`);
             yield (0, promises_1.mkdir)(output, { recursive: true });
         }
-        log.verbose(`Unbundling ${input === '-' ? 'stdin' : input} to ${output === '-' ? 'stdout' : output + '/'}`);
+        log.verbose(`Unbundling ${useStdin ? 'stdin' : input} to ${useStdout ? 'stdout' : output + '/'}`);
         try {
             for (var _d = true, rl_1 = __asyncValues(rl), rl_1_1; rl_1_1 = yield rl_1.next(), _a = rl_1_1.done, !_a;) {
                 _c = rl_1_1.value;
@@ -124,7 +128,7 @@ const ndjsonUnbundle = ({ input, output, name, pretty, }) => __awaiter(void 0, v
                     const prefix = getPrefix(json, name);
                     const number = lineNumber.toString().padStart(6, '0');
                     const filename = prefix ? `${prefix}.json` : `object-${number}.json`;
-                    if (outputStream) {
+                    if (useStdout) {
                         console.log(JSON.stringify(json, null, 2));
                     }
                     else {

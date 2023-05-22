@@ -40,7 +40,7 @@ const argv = yargs
                 type: 'string',
             })
             .option('pretty', {
-                alias: 'y',
+                alias: 'p',
                 default: true,
                 description: 'Pretty-print output files',
                 type: 'boolean',
@@ -99,7 +99,7 @@ const argv = yargs
                 type: 'string',
             })
             .option('pretty', {
-                alias: 'y',
+                alias: 'p',
                 default: true,
                 description: 'Pretty-print output files',
                 type: 'boolean',
@@ -153,12 +153,11 @@ const argv = yargs
         }
     )
     .command(
-        'unbundle [intput] [output]',
-        'Unbundle single [input].ndjson file into multiple json objects',
+        'unbundle [input] [output]',
+        'Unbundle single [input] file into multiple json objects',
         (yargs) => yargs
             .positional('input', {
                 default: '-',
-                demandOption: true,
                 description: 'Input filename or `-` for stdin',
                 type: 'string',
             })
@@ -173,7 +172,7 @@ const argv = yargs
                 type: 'array',
             })
             .option('pretty', {
-                alias: 'y',
+                alias: 'p',
                 default: true,
                 description: 'Pretty-print output objects',
             })

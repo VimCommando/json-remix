@@ -43,7 +43,7 @@ const argv = yargs_1.default
     type: 'string',
 })
     .option('pretty', {
-    alias: 'y',
+    alias: 'p',
     default: true,
     description: 'Pretty-print output files',
     type: 'boolean',
@@ -89,7 +89,7 @@ const argv = yargs_1.default
     type: 'string',
 })
     .option('pretty', {
-    alias: 'y',
+    alias: 'p',
     default: true,
     description: 'Pretty-print output files',
     type: 'boolean',
@@ -131,10 +131,9 @@ const argv = yargs_1.default
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, ndjsonBundle_1.default)(argv);
 }))
-    .command('unbundle [intput] [output]', 'Unbundle single [input].ndjson file into multiple json objects', (yargs) => yargs
+    .command('unbundle [input] [output]', 'Unbundle single [input] file into multiple json objects', (yargs) => yargs
     .positional('input', {
     default: '-',
-    demandOption: true,
     description: 'Input filename or `-` for stdin',
     type: 'string',
 })
@@ -149,7 +148,7 @@ const argv = yargs_1.default
     type: 'array',
 })
     .option('pretty', {
-    alias: 'y',
+    alias: 'p',
     default: true,
     description: 'Pretty-print output objects',
 }), (argv) => __awaiter(void 0, void 0, void 0, function* () {
