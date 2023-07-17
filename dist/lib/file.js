@@ -79,7 +79,6 @@ exports.writeObjectToFile = writeObjectToFile;
  * @throws If there is an error creating the directory or writing any of the files.
  */
 const writeEntriesToFiles = (entries, dir, pretty) => __awaiter(void 0, void 0, void 0, function* () {
-    log.silly(JSON.stringify(entries, null, 2));
     // Don't create the directory if it is the present working directory
     try {
         if (dir !== '.') {

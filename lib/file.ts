@@ -70,7 +70,6 @@ export const writeEntriesToFiles = async (
     dir: string,
     pretty?: boolean,
 ) => {
-    log.silly(JSON.stringify(entries, null, 2));
     // Don't create the directory if it is the present working directory
     try {
         if (dir !== '.') {
